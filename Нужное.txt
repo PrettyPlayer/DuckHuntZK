@@ -1,0 +1,25 @@
+6, 7, 8
+
+#Кортеж при нажатии ПКМ в центре окна размером 200x200
+event.type = pygame.MOUSEBUTTONDOWN
+event.button = 3
+event.pos = (100, 100)
+
+#Скрыть курсор (False)
+pygame.mouse.set_visible()
+
+#Квадрат вместо курсора
+if pygame.mouse.get_focused():
+        pos = pygame.mouse.get_pos()
+        pygame.draw.rect(sc, BLUE, (pos[0]-10, pos[1]-10, 20, 20))
+
+#Создание новой поверхности
+surf = pygame.Surface((200, 150))
+surf.fill((255, 255, 255))
+surf.set_alpha(200)
+sc.blit(surf, (50, 25))
+
+#Вычисление координат вектора по углу
+dir=pygame.math.Vector2()
+dir.from_polar((1, -180))
+print(dir)
