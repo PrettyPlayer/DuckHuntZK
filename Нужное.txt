@@ -23,3 +23,17 @@ sc.blit(surf, (50, 25))
 dir=pygame.math.Vector2()
 dir.from_polar((1, -180))
 print(dir)
+
+		self.alpha=-4
+		self.alpha2=0
+		#Координата Х от центра оружия
+		self.xfc2=0
+		self.xfc=0
+	def turn(self, pos):
+		self.xfc2=1176-pos[0]
+		self.alpha2=self.xfc2//15
+		if self.alpha2!=self.alpha:
+			self.image = pygame.transform.rotozoom(self.image, -(self.alpha-self.alpha2), 1)
+			self.xfc=self.xfc2
+			self.alpha=self.alpha2
+			self.rect = self.image.get_rect(center=(WIDTH//2+300, 900))
