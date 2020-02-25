@@ -7,6 +7,8 @@ FPS = 60
 WIDTH = 1920
 HEIGHT = 1080
 fullscreen = 1
+shotguncount=[0]
+shotguncoord=[0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 #Цвета
 BLACK = (0, 0, 0)
@@ -170,16 +172,26 @@ class Duck(pygame.sprite.Sprite):
 	def hit1(self, pos):
 		if self.x-(self.sx//2) <= pos[0] <= self.x+(self.sx//2) and self.y-(self.sy//2) <= pos[1] <= self.y+(self.sy//2):
 			self.hp-=1
-	def hit2(self, pos):
-		if self.x-(self.sx//2) <= pos[0] <= self.x+(self.sx//2) and self.y-(self.sy//2) <= pos[1] <= self.y+(self.sy//2):
-			self.hp-=1
+	def hit2(self, shotguncoord, shotguncount):
+			for i in range(0,shotguncount[0]*2, 2):
+				if self.x-(self.sx//2) <= shotguncoord[i] <= self.x+(self.sx//2) and self.y-(self.sy//2) <= shotguncoord[i+1] <= self.y+(self.sy//2):
+					self.hp-=1
+			print(self.hp)
+
+def shotguntrace(pos):
+	shotguncount[0]=randint(5,7)
+	for i in range(0,shotguncount[0]*2, 2):
+		dirshot=pygame.math.Vector2()
+		dirshot.from_polar((randint(5, 60), randint(0, 359)))
+		shotguncoord[i]=round(pos[0]+dirshot[0])
+		shotguncoord[i+1]=round(pos[1]+dirshot[1])
 
 #Создание дырок от выстрелов
 class Trace(pygame.sprite.Sprite):
-	def __init__(self, pos, name, num):
+	def __init__(self, pos, name, num, size):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load(os.path.realpath("Sprites\\shot\\" + name + ".png"))
-		self.image = pygame.transform.scale(self.image, (int(self.image.get_width()*0.2), int(self.image.get_height()*0.2)))
+		self.image = pygame.transform.scale(self.image, (int(self.image.get_width()*size), int(self.image.get_height()*size)))
 		self.rect = self.image.get_rect(center=(pos[0], pos[1]))
 		self.num=num
 		self.tracetimer=0
@@ -193,10 +205,13 @@ class Trace(pygame.sprite.Sprite):
 		if self.num==num:
 			self.rect = self.image.get_rect(center=(pos[0], pos[1]))
 			self.tracetimer=60
+	def activatetrace2(self, pos):
+		self.rect = self.image.get_rect(center=(pos[0], pos[1]))
+		self.tracetimer=60
 
 #Создание изображения оружия и его поворот
 class Weapon(pygame.sprite.Sprite):
-	def __init__(self, name, pos0, pos1):
+	def __init__(self, name, pos0, pos1, timeaftershot):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load(os.path.realpath("Sprites\\weapon\\" + name + "\\1.png"))
 		self.image = pygame.transform.scale(self.image, (int(self.image.get_width()*5), int(self.image.get_height()*5)))
@@ -206,6 +221,7 @@ class Weapon(pygame.sprite.Sprite):
 		#Координата Х от центра оружия
 		self.xfc2=0
 		self.xfc=0
+		self.timeaftershot=timeaftershot
 	def turn(self, pos):
 		self.xfc2=1200-pos[0]
 		self.alpha2=self.xfc2//58
@@ -223,7 +239,8 @@ class Weapon(pygame.sprite.Sprite):
 	def reload(self):
 		pass
 	def aftershot(self):
-		pass
+		if self.timeaftershot!=0:
+			self.timeaftershot-=1
 
 ###################################################################################################################################################
 ##Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры##
@@ -235,15 +252,22 @@ def GameWindow():
 	backwindow = pygame.image.load(os.path.realpath("Sprites\\back.png")).convert_alpha()
 	backwindow_rect = backwindow.get_rect(topleft=(0, 0))
 	
-	trace1 = Trace((-200, -200), "trace1", 1)
-	trace2 = Trace((-200, -200), "trace2", 2)
-	trace3 = Trace((-200, -200), "trace3", 3)
-	trace4 = Trace((-200, -200), "trace1", 4)
-	trace5 = Trace((-200, -200), "trace2", 5)
-	trace6 = Trace((-200, -200), "trace3", 6)
+	trace1 = Trace((-200, -200), "trace1", 1, 0.2)
+	trace2 = Trace((-200, -200), "trace2", 2, 0.2)
+	trace3 = Trace((-200, -200), "trace3", 3, 0.2)
+	trace4 = Trace((-200, -200), "trace1", 4, 0.2)
+	trace5 = Trace((-200, -200), "trace2", 5, 0.2)
+	trace6 = Trace((-200, -200), "trace3", 6, 0.2)
+	trace11 = Trace((-200, -200), "trace1", 1, 0.1)
+	trace12 = Trace((-200, -200), "trace2", 2, 0.1)
+	trace13 = Trace((-200, -200), "trace3", 3, 0.1)
+	trace14 = Trace((-200, -200), "trace1", 4, 0.1)
+	trace15 = Trace((-200, -200), "trace2", 5, 0.1)
+	trace16 = Trace((-200, -200), "trace3", 6, 0.1)
+	trace17 = Trace((-200, -200), "trace1", 7, 0.1)
 	
-	pistol = Weapon("pistol\\", WIDTH//2+300, 900)
-	shotgun = Weapon("shotgun\\", WIDTH//2-300, 900)
+	pistol = Weapon("pistol\\", WIDTH//2+300, 900, 15)
+	shotgun = Weapon("shotgun\\", WIDTH//2-300, 900, 60)
 	
 	duck1 = Duck(randint(1, WIDTH), randint(1, HEIGHT), 1.4, 3, "duck7", "black")
 	duck2 = Duck(randint(1, WIDTH), randint(1, HEIGHT), 1.7, 3, "duck8", "black")
@@ -265,19 +289,37 @@ def GameWindow():
 				pistol.turn(event.pos)
 				shotgun.turn2(event.pos)
 			elif event.type == pygame.MOUSEBUTTONDOWN:
-				print(event.pos)
-				duck1.hit1(event.pos)
-				duck2.hit1(event.pos)
-				duck3.hit1(event.pos)
-				trace1.activatetrace(event.pos, num)
-				trace2.activatetrace(event.pos, num)
-				trace3.activatetrace(event.pos, num)
-				trace4.activatetrace(event.pos, num)
-				trace5.activatetrace(event.pos, num)
-				trace6.activatetrace(event.pos, num)
-				num+=1
-				if num==7:
-					num=1
+				mousekey=pygame.mouse.get_pressed()
+				if mousekey[0]==1:
+					if pistol.timeaftershot==0:
+						duck1.hit1(event.pos)
+						duck2.hit1(event.pos)
+						duck3.hit1(event.pos)
+						trace1.activatetrace(event.pos, num)
+						trace2.activatetrace(event.pos, num)
+						trace3.activatetrace(event.pos, num)
+						trace4.activatetrace(event.pos, num)
+						trace5.activatetrace(event.pos, num)
+						trace6.activatetrace(event.pos, num)
+						num+=1
+						if num==7:
+							num=1
+						pistol.timeaftershot=15
+				if mousekey[2]==1:
+					if shotgun.timeaftershot==0:
+						shotguntrace(event.pos)
+						print(shotguncoord)
+						duck1.hit2(shotguncoord, shotguncount)
+						duck2.hit2(shotguncoord, shotguncount)
+						duck3.hit2(shotguncoord, shotguncount)
+						trace11.activatetrace2((shotguncoord[0],shotguncoord[1]))
+						trace12.activatetrace2((shotguncoord[2],shotguncoord[3]))
+						trace13.activatetrace2((shotguncoord[4],shotguncoord[5]))
+						trace14.activatetrace2((shotguncoord[6],shotguncoord[7]))
+						trace15.activatetrace2((shotguncoord[8],shotguncoord[9]))
+						trace16.activatetrace2((shotguncoord[10],shotguncoord[11]))
+						trace17.activatetrace2((shotguncoord[12],shotguncoord[13]))
+						shotgun.timeaftershot=60
 			elif event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_RETURN:
 					fullscreen(fullscreen)
@@ -293,6 +335,16 @@ def GameWindow():
 		trace4.showtrace()
 		trace5.showtrace()
 		trace6.showtrace()
+		
+		trace11.showtrace()
+		trace12.showtrace()
+		trace13.showtrace()
+		trace14.showtrace()
+		trace15.showtrace()
+		if shotguncount[0]>5:
+			trace16.showtrace()
+			if shotguncount[0]>6:
+				trace17.showtrace()
 		
 		duck1.fly()
 		duck2.fly()
@@ -312,6 +364,8 @@ def GameWindow():
 		#Обновление дисплея
 		pygame.display.update()
 		time+=1
+		pistol.aftershot()
+		shotgun.aftershot()
 		
 		#Задержка (FPS)
 		clock.tick(FPS)
