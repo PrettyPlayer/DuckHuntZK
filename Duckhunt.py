@@ -167,7 +167,10 @@ class Duck(pygame.sprite.Sprite):
 			self.x=randint(50,1870)
 			self.y=700
 			self.hp = 1
-	def hit(self, pos):
+	def hit1(self, pos):
+		if self.x-(self.sx//2) <= pos[0] <= self.x+(self.sx//2) and self.y-(self.sy//2) <= pos[1] <= self.y+(self.sy//2):
+			self.hp-=1
+	def hit2(self, pos):
 		if self.x-(self.sx//2) <= pos[0] <= self.x+(self.sx//2) and self.y-(self.sy//2) <= pos[1] <= self.y+(self.sy//2):
 			self.hp-=1
 
@@ -193,11 +196,11 @@ class Trace(pygame.sprite.Sprite):
 
 #Создание изображения оружия и его поворот
 class Weapon(pygame.sprite.Sprite):
-	def __init__(self, name):
+	def __init__(self, name, pos0, pos1):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load(os.path.realpath("Sprites\\weapon\\" + name + "\\1.png"))
 		self.image = pygame.transform.scale(self.image, (int(self.image.get_width()*5), int(self.image.get_height()*5)))
-		self.rect = self.image.get_rect(center=(WIDTH//2+300, 900))
+		self.rect = self.image.get_rect(center=(pos0, pos1))
 		self.alpha=-30
 		self.alpha2=0
 		#Координата Х от центра оружия
@@ -210,6 +213,17 @@ class Weapon(pygame.sprite.Sprite):
 			self.image2 = pygame.transform.rotozoom(self.image, self.alpha2, 1)
 			self.xfc=self.xfc2
 			self.alpha=self.alpha2
+	def turn2(self, pos):
+		self.xfc2=800-pos[0]
+		self.alpha2=self.xfc2//52
+		if self.alpha2!=self.alpha:
+			self.image2 = pygame.transform.rotozoom(self.image, self.alpha2, 1)
+			self.xfc=self.xfc2
+			self.alpha=self.alpha2
+	def reload(self):
+		pass
+	def aftershot(self):
+		pass
 
 ###################################################################################################################################################
 ##Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры##
@@ -228,12 +242,14 @@ def GameWindow():
 	trace5 = Trace((-200, -200), "trace2", 5)
 	trace6 = Trace((-200, -200), "trace3", 6)
 	
-	pistol = Weapon("pistol\\")
+	pistol = Weapon("pistol\\", WIDTH//2+300, 900)
+	shotgun = Weapon("shotgun\\", WIDTH//2-300, 900)
 	
 	duck1 = Duck(randint(1, WIDTH), randint(1, HEIGHT), 1.4, 3, "duck7", "black")
 	duck2 = Duck(randint(1, WIDTH), randint(1, HEIGHT), 1.7, 3, "duck8", "black")
 	duck3 = Duck(randint(1, WIDTH), randint(1, HEIGHT), 2, 3, "duck9", "black")
 	
+	shotgun.turn2((200, 200))
 	pistol.turn((400, 200))
 	
 	num = 1
@@ -247,10 +263,12 @@ def GameWindow():
 				quit()
 			elif event.type == pygame.MOUSEMOTION:
 				pistol.turn(event.pos)
+				shotgun.turn2(event.pos)
 			elif event.type == pygame.MOUSEBUTTONDOWN:
-				duck1.hit(event.pos)
-				duck2.hit(event.pos)
-				duck3.hit(event.pos)
+				print(event.pos)
+				duck1.hit1(event.pos)
+				duck2.hit1(event.pos)
+				duck3.hit1(event.pos)
 				trace1.activatetrace(event.pos, num)
 				trace2.activatetrace(event.pos, num)
 				trace3.activatetrace(event.pos, num)
@@ -290,6 +308,7 @@ def GameWindow():
 		mouse_replace_game(mouse_color_game, mouse_start_len, mouse_len, mouse_thickness)
 		
 		surf_main.blit(pistol.image2, pistol.rect)
+		surf_main.blit(shotgun.image2, shotgun.rect)
 		#Обновление дисплея
 		pygame.display.update()
 		time+=1
