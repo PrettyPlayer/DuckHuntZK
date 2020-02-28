@@ -7,8 +7,6 @@ FPS = 60
 WIDTH = 1920
 HEIGHT = 1080
 fullscreen = 1
-shotguncount=[0]
-shotguncoord=[0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 #Цвета
 BLACK = (0, 0, 0)
@@ -35,7 +33,12 @@ mouse_color_game = GREEN
 #Изменение скорости уток (1..Inf)
 duck_acc=1
 
+#Предустановка
+shotguncount=[0]
+shotguncoord=[0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
 #Вёрстка окна
+pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 surf_main = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("DuckHuntZK")
@@ -176,7 +179,6 @@ class Duck(pygame.sprite.Sprite):
 			for i in range(0,shotguncount[0]*2, 2):
 				if self.x-(self.sx//2) <= shotguncoord[i] <= self.x+(self.sx//2) and self.y-(self.sy//2) <= shotguncoord[i+1] <= self.y+(self.sy//2):
 					self.hp-=1
-			print(self.hp)
 
 def shotguntrace(pos):
 	shotguncount[0]=randint(5,7)
@@ -280,52 +282,102 @@ def GameWindow():
 	time = 0
 	flag=False
 	
+	sound_magnumfire1=pygame.mixer.Sound("Sounds\\guns\\Magnum\\fire1.wav")
+	sound_magnumreload=pygame.mixer.Sound("Sounds\\guns\\Magnum\\reload.wav")
+	sound_shotgunfire1=pygame.mixer.Sound("Sounds\\guns\\BigShotgun\\fire1.wav")
+	sound_shotgunreload=pygame.mixer.Sound("Sounds\\guns\\BigShotgun\\reload1.wav")
+	sound_noammo=pygame.mixer.Sound("Sounds\\guns\\noammo.wav")
+	
+	mousekey0=0
+	mousekey2=0
+	ammomagnum=6
+	ammoshotgun=2
+	reloadmagnum=0
+	reloadshotgun=0
+	
 	while True:
 		surf_main.blit(backwindow, backwindow_rect)
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				quit()
-			elif event.type == pygame.MOUSEMOTION:
-				pistol.turn(event.pos)
-				shotgun.turn2(event.pos)
-			elif event.type == pygame.MOUSEBUTTONDOWN:
-				mousekey=pygame.mouse.get_pressed()
-				if mousekey[0]==1:
-					if pistol.timeaftershot==0:
-						duck1.hit1(event.pos)
-						duck2.hit1(event.pos)
-						duck3.hit1(event.pos)
-						trace1.activatetrace(event.pos, num)
-						trace2.activatetrace(event.pos, num)
-						trace3.activatetrace(event.pos, num)
-						trace4.activatetrace(event.pos, num)
-						trace5.activatetrace(event.pos, num)
-						trace6.activatetrace(event.pos, num)
-						num+=1
-						if num==7:
-							num=1
-						pistol.timeaftershot=15
-				if mousekey[2]==1:
-					if shotgun.timeaftershot==0:
-						shotguntrace(event.pos)
-						print(shotguncoord)
-						duck1.hit2(shotguncoord, shotguncount)
-						duck2.hit2(shotguncoord, shotguncount)
-						duck3.hit2(shotguncoord, shotguncount)
-						trace11.activatetrace2((shotguncoord[0],shotguncoord[1]))
-						trace12.activatetrace2((shotguncoord[2],shotguncoord[3]))
-						trace13.activatetrace2((shotguncoord[4],shotguncoord[5]))
-						trace14.activatetrace2((shotguncoord[6],shotguncoord[7]))
-						trace15.activatetrace2((shotguncoord[8],shotguncoord[9]))
-						trace16.activatetrace2((shotguncoord[10],shotguncoord[11]))
-						trace17.activatetrace2((shotguncoord[12],shotguncoord[13]))
-						shotgun.timeaftershot=60
 			elif event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_RETURN:
 					fullscreen(fullscreen)
-				if event.key == pygame.K_ESCAPE:
+				elif event.key == pygame.K_ESCAPE:
 					flag=True
 					break
+				elif event.key == pygame.K_q:
+					print(ammomagnum, reloadmagnum)
+					if reloadmagnum==0:
+						ammomagnum=0
+						channel1=sound_magnumreload.play()
+						reloadmagnum=FPS*2.3
+				elif event.key == pygame.K_e:
+					print(ammoshotgun, reloadshotgun)
+					if reloadshotgun==0:
+						ammoshotgun=0
+						channel2=sound_shotgunreload.play()
+						reloadshotgun=FPS*1
+			elif event.type == pygame.MOUSEMOTION:
+				pistol.turn(event.pos)
+				shotgun.turn2(event.pos)
+			if event.type == pygame.MOUSEBUTTONDOWN or mousekey0==1 or mousekey2==1:
+				mousekey=pygame.mouse.get_pressed()
+				if mousekey[0]==1 or mousekey0==1:
+					if pistol.timeaftershot==0:
+						if ammomagnum>0:
+							channel=sound_magnumfire1.play()
+							try:
+								duck1.hit1(event.pos)
+								duck2.hit1(event.pos)
+								duck3.hit1(event.pos)
+								trace1.activatetrace(event.pos, num)
+								trace2.activatetrace(event.pos, num)
+								trace3.activatetrace(event.pos, num)
+								trace4.activatetrace(event.pos, num)
+								trace5.activatetrace(event.pos, num)
+								trace6.activatetrace(event.pos, num)
+							except AttributeError:
+								print("AttributeError")
+							num+=1
+							if num==7:
+								num=1
+							pistol.timeaftershot=15
+							ammomagnum-=1
+						elif ammomagnum==0:
+							channel3=sound_noammo.play()
+							pistol.timeaftershot=15
+					mousekey0=1
+				if mousekey[2]==1 or mousekey2==1:
+					if shotgun.timeaftershot==0:
+						if ammoshotgun>0:
+							channel2=sound_shotgunfire1.play()
+							try:
+								shotguntrace(event.pos)
+								duck1.hit2(shotguncoord, shotguncount)
+								duck2.hit2(shotguncoord, shotguncount)
+								duck3.hit2(shotguncoord, shotguncount)
+								trace11.activatetrace2((shotguncoord[0],shotguncoord[1]))
+								trace12.activatetrace2((shotguncoord[2],shotguncoord[3]))
+								trace13.activatetrace2((shotguncoord[4],shotguncoord[5]))
+								trace14.activatetrace2((shotguncoord[6],shotguncoord[7]))
+								trace15.activatetrace2((shotguncoord[8],shotguncoord[9]))
+								trace16.activatetrace2((shotguncoord[10],shotguncoord[11]))
+								trace17.activatetrace2((shotguncoord[12],shotguncoord[13]))
+							except AttributeError:
+								print("AttributeError")
+							shotgun.timeaftershot=20
+							ammoshotgun-=1
+						if ammoshotgun==0:
+							channel3=sound_noammo.play()
+							shotgun.timeaftershot=20
+					mousekey2=1
+			if event.type == pygame.MOUSEBUTTONUP:
+				mousekey=pygame.mouse.get_pressed()
+				if mousekey[0]==0:
+					mousekey0=0
+				if mousekey[2]==0:
+					mousekey2=0
 		if flag:
 			break
 		
@@ -366,6 +418,14 @@ def GameWindow():
 		time+=1
 		pistol.aftershot()
 		shotgun.aftershot()
+		if reloadmagnum!=0:
+			reloadmagnum-=1
+			if reloadmagnum==1:
+				ammomagnum=6
+		if reloadshotgun!=0:
+			reloadshotgun-=1
+			if reloadshotgun==1:
+				ammoshotgun=2
 		
 		#Задержка (FPS)
 		clock.tick(FPS)
