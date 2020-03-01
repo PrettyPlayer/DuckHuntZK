@@ -388,7 +388,6 @@ def GameWindow():
 					mousekey2=0
 		if flag:
 			break
-		surf_main.blit(revolverimage, revolverrect)
 		trace1.showtrace()
 		trace2.showtrace()
 		trace3.showtrace()
