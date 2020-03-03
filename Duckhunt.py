@@ -40,10 +40,10 @@ shotguncoord=[0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 #Вёрстка окна
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
+img = pygame.image.load(os.path.realpath("Sprites\\icon2.png"))
+pygame.display.set_icon(img)
 surf_main = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("DuckHuntZK")
-img = pygame.image.load(os.path.realpath("Sprites\\Icon.png"))
-pygame.display.set_icon(img)
 clock = pygame.time.Clock()
 pygame.mouse.set_visible(False)
 
@@ -83,7 +83,7 @@ class Button(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect(center=(x, y))
 		self.sx=self.image.get_width()
 		self.sy=self.image.get_height()
-		self.font = pygame.font.Font('Fonts/'+font, sizetext)
+		self.font = pygame.font.Font("Fonts\\" + font, sizetext)
 		self.text = self.font.render(text, 1, color)
 		self.place = self.text.get_rect(center=(self.sx//2, self.sy//2))
 		self.name = text
@@ -92,6 +92,13 @@ class Button(pygame.sprite.Sprite):
 			if self.name == "Играть":
 				GameWindow()
 
+class Text(pygame.sprite.Sprite):
+	def __init__(self, font, sizetext):
+		pygame.sprite.Sprite.__init__(self)
+		self.font = pygame.font.Font("Fonts\\" + font, sizetext)
+	def show(self, text, x, y, color):
+		self.text = self.font.render(text, 1, color)
+		self.place = self.text.get_rect(topleft=(x, y))
 #Создание уток, их полет и действие по нажатию на утку
 class Duck(pygame.sprite.Sprite):
 	def __init__(self, duck_x, duck_y, size, acc, filename, name):
@@ -245,18 +252,18 @@ class Weapon(pygame.sprite.Sprite):
 			self.timeaftershot-=1
 
 def rot_center(image, rect, angle):
-		rot_image = pygame.transform.rotate(image, angle)
-		rot_rect = rot_image.get_rect(center=rect.center)
-		return rot_image,rot_rect
+	rot_image = pygame.transform.rotate(image, angle)
+	rot_rect = rot_image.get_rect(center=rect.center)
+	return rot_image,rot_rect
 
 ###################################################################################################################################################
 ##Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры#Начало игры##
 ###################################################################################################################################################
 def GameWindow():
-	frontwindow = pygame.image.load(os.path.realpath("Sprites\\front.png")).convert_alpha()
+	randombackground=randint(1,4)
+	frontwindow = pygame.image.load(os.path.realpath("Sprites\\background\\front" + str(randombackground) + ".png")).convert_alpha()
 	frontwindow_rect = frontwindow.get_rect(topleft=(0, 0))
-	
-	backwindow = pygame.image.load(os.path.realpath("Sprites\\back.png")).convert_alpha()
+	backwindow = pygame.image.load(os.path.realpath("Sprites\\background\\back" + str(randombackground) + ".png")).convert_alpha()
 	backwindow_rect = backwindow.get_rect(topleft=(0, 0))
 	
 	trace1 = Trace((-200, -200), "trace1", 1, 0.2)
@@ -287,6 +294,9 @@ def GameWindow():
 	time = 0
 	flag=False
 	
+	pygame.mixer.init()
+	music=pygame.mixer.music.load("Music\\" + str(randint(1,2)) + ".mp3")
+	music=pygame.mixer.music.play()
 	sound_magnumfire1=pygame.mixer.Sound("Sounds\\guns\\Magnum\\fire1.wav")
 	sound_magnumreload=pygame.mixer.Sound("Sounds\\guns\\Magnum\\reload.wav")
 	sound_shotgunfire1=pygame.mixer.Sound("Sounds\\guns\\BigShotgun\\fire1.wav")
@@ -302,9 +312,15 @@ def GameWindow():
 	ammoshotgun=2
 	reloadmagnum=0
 	reloadshotgun=0
+	ammomagnumtext = Text("times.ttf", 36)
+	ammoshotguntext = Text("times.ttf", 36)
 	
 	while True:
 		surf_main.blit(backwindow, backwindow_rect)
+		
+		ammomagnumtext.show("ammomagnum = " + str(ammomagnum), 50, 50, RED)
+		ammoshotguntext.show("ammoshotgun = " + str(ammoshotgun), 50, 100, RED)
+		
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				quit()
@@ -420,6 +436,8 @@ def GameWindow():
 		
 		surf_main.blit(pistol.image2, pistol.rect)
 		surf_main.blit(shotgun.image2, shotgun.rect)
+		surf_main.blit(ammomagnumtext.text, ammomagnumtext.place)
+		surf_main.blit(ammoshotguntext.text, ammoshotguntext.place)
 		#Обновление дисплея
 		pygame.display.update()
 		time+=1
